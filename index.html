@@ -4646,11 +4646,39 @@ footer {
                 </span>
 
 
-                <form
-                    id="contact-form"
-                    novalidate
-                >
+      <form
+    id="contact-form"
+    action="https://formsubmit.co/theorganisedtypes@gmail.com"
+    method="POST"
+    novalidate
+>
 
+    <input
+        type="hidden"
+        name="_subject"
+        value="New website enquiry — The Counselling Vine"
+    >
+
+    <input
+        type="hidden"
+        name="_template"
+        value="table"
+    >
+
+    <input
+        type="hidden"
+        name="_captcha"
+        value="false"
+    >
+
+    <!-- Honeypot spam protection -->
+    <input
+        type="text"
+        name="_honey"
+        style="display:none"
+        tabindex="-1"
+        autocomplete="off"
+    >
 
                     <div
                         class="field"
@@ -5297,7 +5325,8 @@ updateVineProgress();
 
 
 /* =====================================================
-   CONTACT FORM VALIDATION
+   CONTACT FORM
+   FORMSubmit AJAX
 ====================================================== */
 
 const form =
@@ -5332,29 +5361,78 @@ function validateField(
     ) {
 
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-            .test(
-                cleaned
-            );
+            .test(cleaned);
 
     }
 
 
-    return (
-        cleaned.length > 0
-    );
+    if (
+        name === 'phone'
+    ) {
+
+        return cleaned.length >= 7;
+
+    }
+
+
+    return cleaned.length > 0;
 
 }
 
 
+/* clear validation message while typing */
+
+form
+    .querySelectorAll(
+        'input, textarea'
+    )
+    .forEach(
+        input => {
+
+            input.addEventListener(
+                'input',
+                () => {
+
+                    const field =
+                        input.closest(
+                            '.field'
+                        );
+
+
+                    if (
+                        field
+                    ) {
+
+                        field
+                            .classList
+                            .remove(
+                                'invalid'
+                            );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+/* submit */
+
 form.addEventListener(
     'submit',
-    event => {
+    async event => {
 
         event.preventDefault();
 
 
         let valid =
             true;
+
+
+        let firstInvalid =
+            null;
 
 
         [
@@ -5400,6 +5478,16 @@ form.addEventListener(
                     valid =
                         false;
 
+
+                    if (
+                        !firstInvalid
+                    ) {
+
+                        firstInvalid =
+                            input;
+
+                    }
+
                 }
 
             }
@@ -5409,6 +5497,15 @@ form.addEventListener(
         if (
             !valid
         ) {
+
+            if (
+                firstInvalid
+            ) {
+
+                firstInvalid.focus();
+
+            }
+
 
             return;
 
@@ -5421,6 +5518,10 @@ form.addEventListener(
             );
 
 
+        const originalText =
+            button.textContent;
+
+
         button.disabled =
             true;
 
@@ -5429,67 +5530,102 @@ form.addEventListener(
             'Sending…';
 
 
-        /*
-         * IMPORTANT:
-         *
-         * This is currently the front-end confirmation
-         * behaviour only.
-         *
-         * Connect this section to your actual form/API
-         * endpoint when ready.
-         */
+        try {
+
+            const formData =
+                new FormData(
+                    form
+                );
 
 
-        setTimeout(
-            () => {
+            const response =
+                await fetch(
+                    'https://formsubmit.co/ajax/thecounsellingvine@gmail.com',
+                    {
 
-                defaultPanel
-                    .style
-                    .display =
-                        'none';
+                        method:
+                            'POST',
+
+                        headers: {
+
+                            'Accept':
+                                'application/json'
+
+                        },
+
+                        body:
+                            formData
+
+                    }
+                );
 
 
-                successPanel
-                    .classList
-                    .add(
-                        'show'
-                    );
+            if (
+                !response.ok
+            ) {
 
-            },
-            700
-        );
+                throw new Error(
+                    'Unable to send form'
+                );
 
-    }
-);
+            }
 
 
-/* remove error state when user starts correcting field */
+            const result =
+                await response.json();
 
-form
-    .querySelectorAll(
-        'input, textarea'
-    )
-    .forEach(
-        input => {
 
-            input.addEventListener(
-                'input',
-                () => {
+            console.log(
+                'Form submitted:',
+                result
+            );
 
-                    input
-                        .closest(
-                            '.field'
-                        )
-                        .classList
-                        .remove(
-                            'invalid'
-                        );
 
-                }
+            /* show our styled confirmation */
+
+            defaultPanel
+                .style
+                .display =
+                    'none';
+
+
+            successPanel
+                .classList
+                .add(
+                    'show'
+                );
+
+
+            form.reset();
+
+
+        }
+        catch (
+            error
+        ) {
+
+            console.error(
+                'Form submission failed:',
+                error
+            );
+
+
+            button.disabled =
+                false;
+
+
+            button.textContent =
+                originalText;
+
+
+            alert(
+                'Sorry, your message could not be sent. Please try again or email thecounsellingvine@gmail.com directly.'
             );
 
         }
-    );
+
+    }
+);
 
 </script>
 
